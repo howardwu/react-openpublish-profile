@@ -1,5 +1,4 @@
 var React = require('react');
-var xhr = require('xhr');
 
 //local imports
 var BitstoreContent = require('./bitstore-content.js');

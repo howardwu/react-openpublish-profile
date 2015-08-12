@@ -3,7 +3,7 @@ var React = require('react');
 var Panel = require('react-bootstrap/lib/Panel');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 
-//a react component for wrapping around bitstore content.
+// A React component for wrapping around Bitstore content.
 var BitstoreContent = React.createClass({
   render: function() {
     var permalink = this.props.permalink;
