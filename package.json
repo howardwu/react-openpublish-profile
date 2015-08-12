@@ -1,0 +1,40 @@
+{
+  "name": "react-openpublish-profile",
+  "version": "1.0.0",
+  "description": "A React component for querying and rendering OpenPublish assets",
+  "main": "build/index.js",
+  "scripts": {
+    "start": "foreman start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howardwu/react-openpublish-profile.git"
+  },
+  "keywords": [
+    "OpenPublish",
+    "Bitcoin",
+    "Assets",
+    "React"
+  ],
+  "author": "Howard Wu <howardwu@berkeley.edu> (https://github.com/howardwu)",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/howardwu/react-openpublish-profile/issues"
+  },
+  "homepage": "https://github.com/howardwu/react-openpublish-profile#readme",
+  "maintainers": {
+    "Howard Wu": "howardwu@berkeley.edu",
+    "Andrew Malta": "andrew.malta@yale.edu"
+  },
+  "dependencies": {
+    "express": "^4.13.3",
+    "react": "^0.13.3",
+    "react-bootstrap": "^0.24.3",
+    "xhr": "^2.0.3"
+  },
+  "devDependencies": {
+    "babel": "^5.8.20",
+    "babelify": "^6.1.3",
+    "browserify": "^11.0.1"
+  }
+}
