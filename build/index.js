@@ -37,8 +37,12 @@ var Profile = React.createClass({
   displayName: 'Profile',
 
   getInitialState: function getInitialState() {
+    var commonBlock = commonBlockchain({
+      network: this.props.network,
+      inBrowser: true
+    });
     var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlockchain({ network: this.props.network, inBrowser: true }),
+      commonBlockchain: commonBlock,
       network: this.props.network,
       wif: this.props.wif
     });
@@ -46,18 +50,23 @@ var Profile = React.createClass({
       inBrowser: true,
       commonWallet: commonWallet
     });
-    this.balance();
+    var openpublishState = require('openpublish-state')({
+      network: this.props.network
+    });
     return {
       getProfileData: true,
       balance: "Loading...",
       bitstore_balance: "Loading...",
-      blockchain: null,
+      wallet: commonWallet,
       ttcClient: tipToCommentClient,
-      wallet: commonWallet
+      commonBlockchain: commonBlock,
+      openpublishState: openpublishState
     };
   },
 
   componentDidMount: function componentDidMount() {
+    this.balance();
+
     var BASE = 'http://coinvote-testnet.herokuapp.com';
     if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
     if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
@@ -69,7 +78,7 @@ var Profile = React.createClass({
     var queryGoal = 3;
 
     var that = this;
-    this.posts(BASE, function (posts) {
+    this.posts(function (posts) {
       userPosts = posts;
       if (++queryCount === queryGoal) {
         that.renderProfile(userPosts, userComments, userTips);
@@ -90,25 +99,14 @@ var Profile = React.createClass({
   },
 
   balance: function balance() {
-    var BASE = 'http://coinvote-testnet.herokuapp.com';
-    if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
-    if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
     var that = this;
-    xhr({
-      uri: BASE + '/getBalance/' + this.props.address,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      method: 'GET'
-    }, function (err, resp, body) {
+    this.state.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
       if (err) {
-        console.log("error retrieving balance from server");
+        console.log("error retrieving balance from common-blockchain");
       } else {
-        var parsed = JSON.parse(body);
-        var balance = parsed.balance / 100000000;
+        var balance = resp[0].balance / 100000000;
         getBitstoreBalance(that.props.wif, that.props.network, function (error, bitstoreBalance) {
           that.setState({
-            base: BASE,
             balance: balance,
             bitstore_balance: bitstoreBalance.body.balance / 100000000,
             updateBalance: false
@@ -118,23 +116,23 @@ var Profile = React.createClass({
     });
   },
 
-  posts: function posts(base, callback) {
-    xhr({
-      uri: base + '/getPosts/user?address=' + this.props.address,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      method: 'GET'
-    }, function (err, resp, body) {
-      console.log("Received response from server");
+  posts: function posts(callback) {
+    this.state.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
       if (!err) {
-        var posts = JSON.parse(body).posts;
-        callback(posts);
+        callback(assets.posts);
       }
     });
   },
 
   tips: function tips(base, callback) {
+    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+    //   function (err, tips) {
+    //     if (!err) {
+    //       callback(tips);
+    //     }
+    //   }
+    // );
+
     var that = this;
     xhr({
       uri: base + '/getTips?user=' + this.props.address,
@@ -155,6 +153,7 @@ var Profile = React.createClass({
       if (err) {
         console.log(err);
       } else {
+        console.log(resp);
         callback(resp);
       }
     });

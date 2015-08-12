@@ -35,6 +35,7 @@
     "express": "^4.13.3",
     "halogen": "^0.1.10",
     "openpublish": "0.0.10",
+    "openpublish-state": "0.0.4",
     "react": "^0.13.3",
     "react-bootstrap": "^0.24.3",
     "reactify": "^1.1.1",

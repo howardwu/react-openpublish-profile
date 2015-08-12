@@ -37,8 +37,12 @@ function postTime(datetime) {
 
 var Profile = React.createClass({
   getInitialState: function() {
+    var commonBlock = commonBlockchain({
+      network: this.props.network,
+      inBrowser: true
+    });
     var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlockchain({ network: this.props.network, inBrowser: true }),
+      commonBlockchain: commonBlock,
       network: this.props.network,
       wif: this.props.wif
     });
@@ -46,96 +50,70 @@ var Profile = React.createClass({
       inBrowser: true,
       commonWallet: commonWallet
     });
-    this.balance();
+    var openpublishState = require('openpublish-state')({
+      network: this.props.network
+    });
     return {
       getProfileData: true,
       balance: "Loading...",
       bitstore_balance: "Loading...",
-      blockchain: null,
+      wallet: commonWallet,
       ttcClient: tipToCommentClient,
-      wallet: commonWallet
+      commonBlockchain: commonBlock,
+      openpublishState: openpublishState
     }
   },
 
   componentDidMount: function () {
-    var BASE = 'http://coinvote-testnet.herokuapp.com';
-    if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
-    if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
-
-    var userPosts;
-    var userTips;
-    var userComments;
-    var queryCount = 0;
-    var queryGoal = 3;
-     
+    this.balance();
     var that = this;
-    this.posts(BASE, function (posts) {
-      userPosts = posts;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
+    this.posts(function (posts) {
+      that.tips(BASE, function (tips) {
+        that.comments(function (comments) {
+          that.renderProfile(posts, comments, tips);
+        });
+      });
     });
-    this.tips(BASE, function (tips) {
-      userTips = tips;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    });
-    this.comments(function (comments) {
-      userComments = comments;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    }); 
   },
 
   balance: function () {
-    var BASE = 'http://coinvote-testnet.herokuapp.com';
-    if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
-    if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
     var that = this;
-    xhr({
-      uri: BASE + '/getBalance/' + this.props.address,
-      headers: {
-          "Content-Type": "application/json"
-      },
-      method: 'GET'
-    }, function (err, resp, body) {
+    this.state.commonBlockchain.Addresses.Summary([ this.props.address ], function (err, resp) {
       if (err) {
-        console.log("error retrieving balance from server");
+        console.log("error retrieving balance from common-blockchain");
       }
       else {
-        var parsed = JSON.parse(body);
-        var balance = parsed.balance / 100000000;
+        var balance = resp[0].balance / 100000000;
         getBitstoreBalance(that.props.wif, that.props.network, function (error, bitstoreBalance) {
           that.setState({
-            base: BASE,
             balance: balance,
             bitstore_balance: bitstoreBalance.body.balance / 100000000,
             updateBalance: false
           });
-        });   
+        });
       }
     });
   },
 
-  posts: function (base, callback) {
-    xhr({
-      uri: base + '/getPosts/user?address=' + this.props.address,
-      headers: {
-        "Content-Type": "application/json"
-      },
-      method: 'GET'
-    }, function (err, resp, body) {
-      console.log("Received response from server");
-      if (!err) {
-        var posts = JSON.parse(body).posts;
-        callback(posts);
+  posts: function (callback) {
+    this.state.openpublishState.findAssetsByUser({ address: this.props.address },
+      function (err, assets) {
+        if (!err) {
+          callback(assets.posts);
+        }
       }
-    });
+    );
   },
 
   tips: function (base, callback) {
+    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+    //   function (err, tips) {
+    //     if (!err) {
+    //       callback(tips);
+    //     }
+    //   }
+    // );
+
     var that = this;
      xhr({
       uri: base + '/getTips?user=' + this.props.address,    
@@ -149,7 +127,6 @@ var Profile = React.createClass({
   },
 
   comments: function (callback) {
-    var that = this;
     this.state.ttcClient.getComments({
       method: "address",
       query: this.props.address
