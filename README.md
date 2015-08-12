@@ -1,4 +1,4 @@
-# react-openpublish-assets
+# react-openpublish-profile
 
 ## Development
 

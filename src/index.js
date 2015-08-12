@@ -1,7 +1,9 @@
 var React = require('react');
 var xhr = require('xhr');
 
-var Post = require('./post.jsx');
+var Post = require('./post.js');
+var IDPicture = require('./id-picture.js');
+var Comment = require('./comment.js');
 
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
@@ -10,11 +12,6 @@ var NavItem = require('react-bootstrap/lib/NavItem');
 var Panel = require('react-bootstrap/lib/Panel');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 var Button = require('react-bootstrap/lib/Button');
-
-var MD5 = require('crypto-js/md5');
-
-var IDPicture = require('./id-picture.jsx');
-var Comment = require('./comment.jsx');
 
 function postTime(datetime) {
   var oneDay = 24*60*60*1000;
@@ -223,7 +220,6 @@ var Profile = React.createClass({
   },
 
   render: function() {
-    var md5hash =  MD5(this.props.profile_id);
     if (this.state.getProfileData) {
       return (
         <div className="container">

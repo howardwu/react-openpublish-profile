@@ -27,7 +27,9 @@
     "Andrew Malta": "andrew.malta@yale.edu"
   },
   "dependencies": {
+    "crypto-js": "^3.1.5",
     "express": "^4.13.3",
+    "openpublish": "0.0.10",
     "react": "^0.13.3",
     "react-bootstrap": "^0.24.3",
     "xhr": "^2.0.3"
