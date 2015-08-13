@@ -66,35 +66,13 @@ var Profile = React.createClass({
 
   componentDidMount: function componentDidMount() {
     this.balance();
-
-    var BASE = 'http://coinvote-testnet.herokuapp.com';
-    if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
-    if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
-
-    var userPosts;
-    var userTips;
-    var userComments;
-    var queryCount = 0;
-    var queryGoal = 3;
-
     var that = this;
     this.posts(function (posts) {
-      userPosts = posts;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    });
-    this.tips(BASE, function (tips) {
-      userTips = tips;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    });
-    this.comments(function (comments) {
-      userComments = comments;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
+      that.tips(function (tips) {
+        that.comments(function (comments) {
+          that.renderProfile(posts, comments, tips);
+        });
+      });
     });
   },
 
@@ -124,7 +102,7 @@ var Profile = React.createClass({
     });
   },
 
-  tips: function tips(base, callback) {
+  tips: function tips(callback) {
     // this.state.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
@@ -135,25 +113,23 @@ var Profile = React.createClass({
 
     var that = this;
     xhr({
-      uri: base + '/getTips?user=' + this.props.address,
+      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,
       method: 'GET'
     }, function (err, resp, body) {
       if (err) console.log("error fetching comments from server: " + err);else {
-        callback(JSON.parse(body).tips);
+        callback(JSON.parse(body));
       }
     });
   },
 
   comments: function comments(callback) {
-    var that = this;
     this.state.ttcClient.getComments({
       method: "address",
       query: this.props.address
     }, function (err, resp) {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
-        console.log(resp);
         callback(resp);
       }
     });

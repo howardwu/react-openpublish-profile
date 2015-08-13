@@ -68,7 +68,7 @@ var Profile = React.createClass({
     this.balance();
     var that = this;
     this.posts(function (posts) {
-      that.tips(BASE, function (tips) {
+      that.tips(function (tips) {
         that.comments(function (comments) {
           that.renderProfile(posts, comments, tips);
         });
@@ -105,7 +105,7 @@ var Profile = React.createClass({
     );
   },
 
-  tips: function (base, callback) {
+  tips: function (callback) {
     // this.state.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
@@ -116,12 +116,12 @@ var Profile = React.createClass({
 
     var that = this;
      xhr({
-      uri: base + '/getTips?user=' + this.props.address,    
+      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,    
       method: 'GET'
     }, function (err, resp, body) {
       if (err) console.log("error fetching comments from server: " + err);
       else {
-        callback(JSON.parse(body).tips);
+        callback(JSON.parse(body));
       }
     });
   },
@@ -132,7 +132,7 @@ var Profile = React.createClass({
       query: this.props.address
     }, function (err, resp) {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
       else {
         callback(resp);
