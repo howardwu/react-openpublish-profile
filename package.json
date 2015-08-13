@@ -27,10 +27,13 @@
     "Andrew Malta": "andrew.malta@yale.edu"
   },
   "dependencies": {
+    "babel": "^5.8.20",
+    "babelify": "^6.1.3",
     "bigi": "^1.4.0",
     "bitcoinjs-lib": "^1.5.7",
     "bitstore": "0.0.6",
     "blockcypher-unofficial": "^1.5.0",
+    "browserify": "^11.0.1",
     "crypto-js": "^3.1.5",
     "express": "^4.13.3",
     "halogen": "^0.1.10",
@@ -42,10 +45,5 @@
     "test-common-wallet": "^1.0.8",
     "tip-to-comment-client": "^1.0.4",
     "xhr": "^2.0.3"
-  },
-  "devDependencies": {
-    "babel": "^5.8.20",
-    "babelify": "^6.1.3",
-    "browserify": "^11.0.1"
   }
 }
