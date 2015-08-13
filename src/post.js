@@ -49,7 +49,7 @@ var Post = React.createClass({
 
   tip: function () {
     var post = this.props.post;
-    if (this.state.hasTipped || this.props.user_id === this.props.post.owner) {
+    if (this.state.hasTipped) {
       return (
         <div className="postTipButton">
           <Tip user_id={this.props.user_id} hasTipped={true} wallet={this.props.wallet} blockchain={this.props.blockchain} post={this.props.post}/>
@@ -191,7 +191,7 @@ var Post = React.createClass({
     return (
       <Panel key={post.sha1}>
         <div className="postIDPicture">
-          <IDPicture size={50} user_id={post.owner} />
+          <IDPicture size={50} user_id={this.props.owner} />
         </div>
 
         <div className="postPermalink"> 
@@ -201,9 +201,9 @@ var Post = React.createClass({
         </div>
 
         <div className="postText">
-          <b> <a>{post.owner} </a> </b> published {connector} {type}
+          <b> <a>{this.props.owner} </a> </b> published {connector} {type}
           <br />
-          {postTime(post.datetime)}
+          {postTime(post.created_at)}
         </div>
 
         <div className="postContent">

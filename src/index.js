@@ -4,7 +4,6 @@ var xhr = require('xhr');
 var Post = require('./post.js');
 var Comment = require('./comment.js');
 var IDPicture = require('./id-picture.js');
-var getBitstoreBalance = require('./bitstore.js');
 
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
@@ -37,7 +36,6 @@ var Profile = React.createClass({
     return {
       getProfileData: true,
       balance: "Loading...",
-      bitstore_balance: "Loading..."
     }
   },
 
@@ -61,22 +59,18 @@ var Profile = React.createClass({
       }
       else {
         var balance = resp[0].balance / 100000000;
-        getBitstoreBalance(that.props.wif, that.props.network, function (error, bitstoreBalance) {
-          that.setState({
-            balance: balance,
-            bitstore_balance: bitstoreBalance.body.balance / 100000000,
-            updateBalance: false
-          });
+        that.setState({
+          balance: balance
         });
       }
     });
   },
 
   posts: function (callback) {
-    this.props.openpublishState.findAssetsByUser({ address: this.props.address },
+    this.props.openpublishState.findDocsByUser({ address: this.props.address },
       function (err, assets) {
         if (!err) {
-          callback(assets.posts);
+          callback(assets);
         }
       }
     );
@@ -90,7 +84,6 @@ var Profile = React.createClass({
     //     }
     //   }
     // );
-
     var that = this;
      xhr({
       url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,    
@@ -134,7 +127,8 @@ var Profile = React.createClass({
     }
     for (var i = 0; i < posts.length; i++) {
       var post = posts[i];
-      var tipped = false;
+      var tipped = this.props.address === this.props.commonWallet.address;
+      console.log(tipped);
       renderPosts.push(
         <Post key={i}
               refKey={i}
@@ -144,7 +138,8 @@ var Profile = React.createClass({
               user_id={this.props.commonWallet.address}
               wallet={this.props.commonWallet}
               blockchain={this.props.commonBlockchain}
-              tccClient={this.props.tipToComment} />
+              tccClient={this.props.tipToComment}
+              owner={this.props.address} />
       );
     }
     this.setState({

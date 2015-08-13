@@ -49,7 +49,7 @@ var Post = React.createClass({
 
   tip: function tip() {
     var post = this.props.post;
-    if (this.state.hasTipped || this.props.user_id === this.props.post.owner) {
+    if (this.state.hasTipped) {
       return React.createElement(
         'div',
         { className: 'postTipButton' },
@@ -238,7 +238,7 @@ var Post = React.createClass({
       React.createElement(
         'div',
         { className: 'postIDPicture' },
-        React.createElement(IDPicture, { size: 50, user_id: post.owner })
+        React.createElement(IDPicture, { size: 50, user_id: this.props.owner })
       ),
       React.createElement(
         'div',
@@ -259,7 +259,7 @@ var Post = React.createClass({
           React.createElement(
             'a',
             null,
-            post.owner,
+            this.props.owner,
             ' '
           ),
           ' '
@@ -269,7 +269,7 @@ var Post = React.createClass({
         ' ',
         type,
         React.createElement('br', null),
-        postTime(post.datetime)
+        postTime(post.created_at)
       ),
       React.createElement(
         'div',
