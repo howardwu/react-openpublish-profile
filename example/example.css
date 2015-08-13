@@ -50,7 +50,7 @@ body {
   float: left;
 }
 .postContent {
-  margin-left: 60px;
+  margin-left: 7%;
   padding-top:  60px;
   max-width: 40%;
 }
@@ -60,14 +60,22 @@ body {
 }
 .postTipActions {
   padding-top: 15px;
+  padding-left: 7%;
+}
+.postTipError {
+  margin-left: 100px;
+  font-size: 20px;
+  font-weight: bold;
 }
 .postCommentLink {
   float: left;
   padding-left: 10px;
+  padding-right: 10px;
   font-size: 15px;
 }
 .postCommentBox {
-  padding-top: 30px;
+  padding-top: 5%;
+  padding-left: 7%;
 }
 .bitstoreImagePreview {
   max-height: 350px;

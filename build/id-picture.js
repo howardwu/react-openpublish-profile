@@ -17,7 +17,7 @@ var IDPicture = React.createClass({
     } else if (this.props.size) {
       return React.createElement(
         'a',
-        { href: "/profile?user=" + this.props.user_id },
+        null,
         React.createElement(
           'div',
           { className: 'hoverIdPicture' },

@@ -60,8 +60,8 @@ var TipButton = React.createClass({
         }, function (error, tipTx) {
           if (error) {
             console.log("did not update balances: " + error);
-            that.setState({ isLoading: false, hasTipped: false,
-              tipMessage: "error processing your tip. Make sure you have enough bitcoin in your wallet!" });
+            that.setState({ isLoading: false, hasTipped: false });
+            that.props.failure("Not enough bitcoin in wallet.");
           } else {
             var tipBody = { owner: post.owner, sha1: post.sha1, txid: tipTx.txid };
             xhr({

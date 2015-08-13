@@ -41,6 +41,12 @@ var Post = React.createClass({
     });
   },
 
+  setTipErrorMessage: function setTipErrorMessage(error) {
+    this.setState({
+      tipMessage: error
+    });
+  },
+
   tip: function tip() {
     var post = this.props.post;
     if (this.state.hasTipped || this.props.user_id === this.props.post.owner) {
@@ -54,7 +60,7 @@ var Post = React.createClass({
         'div',
         { className: 'postTipButton' },
         React.createElement(Tip, { user_id: this.props.user_id, hasTipped: false, wallet: this.props.wallet,
-          blockchain: this.props.blockchain, post: this.props.post, success: this.updateHasTipped })
+          blockchain: this.props.blockchain, post: this.props.post, success: this.updateHasTipped, failure: this.setTipErrorMessage })
       );
     }
   },
@@ -98,6 +104,7 @@ var Post = React.createClass({
           var comments = resp;
           if (comments.length > 0) {
             var length = Math.min(3, comments.length);
+            var numLeft = Math.max(0, comments.length - 3);
             for (var i = 0; i < length; i++) {
               if (comments[i].confirmed || that.props.user_id === comments[i].commenter) {
                 var comment = comments[i];
@@ -119,7 +126,7 @@ var Post = React.createClass({
                       { className: 'commentHeader' },
                       React.createElement(
                         'a',
-                        { href: "/profile?user=" + comment.commenter },
+                        null,
                         comment.commenter.substring(0, 20) + "... "
                       ),
                       React.createElement(
@@ -137,8 +144,7 @@ var Post = React.createClass({
                   )
                 ));
               }
-              if (i === length - 1) {
-                var numLeft = comments.length - 3;
+              if (numLeft > 0) {
                 commentsJSX.push(React.createElement(
                   Panel,
                   { key: i },
@@ -150,7 +156,7 @@ var Post = React.createClass({
                       null,
                       React.createElement(
                         'a',
-                        { key: "comments:" + i, href: "permalink?sha1=" + sha1 },
+                        { key: "comments:" + i },
                         'See ',
                         numLeft,
                         ' more'
@@ -158,17 +164,13 @@ var Post = React.createClass({
                     )
                   )
                 ));
-                that.setState({
-                  comments: React.createElement(
-                    'div',
-                    null,
-                    commentsJSX
-                  ),
-                  numComments: comments.length,
-                  loading: false
-                });
               }
             }
+            that.setState({
+              comments: { commentsJSX: commentsJSX },
+              numComments: comments.length,
+              loading: false
+            });
           } else {
             commentsJSX.push(React.createElement(
               Panel,
@@ -180,23 +182,6 @@ var Post = React.createClass({
                   'h4',
                   null,
                   'No Comments to Display'
-                )
-              )
-            ));
-            commentsJSX.push(React.createElement(
-              Panel,
-              { key: 1 },
-              React.createElement(
-                'center',
-                null,
-                React.createElement(
-                  'h5',
-                  null,
-                  React.createElement(
-                    'a',
-                    { key: "comments:" + i, href: "permalink?sha1=" + sha1 },
-                    'See more'
-                  )
                 )
               )
             ));
@@ -260,7 +245,7 @@ var Post = React.createClass({
         { className: 'postPermalink' },
         React.createElement(
           'a',
-          { href: "permalink?sha1=" + post.sha1 },
+          null,
           React.createElement(Glyphicon, { glyph: 'link' })
         )
       ),
@@ -273,7 +258,7 @@ var Post = React.createClass({
           ' ',
           React.createElement(
             'a',
-            { href: "/profile?user=" + post.owner },
+            null,
             post.owner,
             ' '
           ),
@@ -289,28 +274,28 @@ var Post = React.createClass({
       React.createElement(
         'div',
         { className: 'postContent' },
-        React.createElement(BitstoreContent, { post: post, permalink: false }),
+        React.createElement(BitstoreContent, { post: post, permalink: false })
+      ),
+      React.createElement(
+        'div',
+        { className: 'postTipActions' },
+        this.tip(),
         React.createElement(
           'div',
-          { className: 'postTipActions' },
-          this.tip(),
-          React.createElement(
-            'div',
-            { className: 'postCommentLink' },
-            commentButton
-          )
+          { className: 'postCommentLink' },
+          commentButton
         ),
         React.createElement(
-          'p',
-          null,
+          'div',
+          { className: 'postTipError' },
           ' ',
           this.state.tipMessage
-        ),
-        React.createElement(
-          'div',
-          { className: 'postCommentBox' },
-          this.state.comments
         )
+      ),
+      React.createElement(
+        'div',
+        { className: 'postCommentBox' },
+        this.state.comments
       )
     );
   }

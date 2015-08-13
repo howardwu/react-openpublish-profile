@@ -14,7 +14,7 @@ var IDPicture = React.createClass({
     }
     else if (this.props.size) {
       return(
-        <a href={"/profile?user=" + this.props.user_id}>
+        <a>
           <div className="hoverIdPicture"> 
             <img style={{height: this.props.size, width: this.props.size}} src={"http://secure.gravatar.com/avatar/" + md5hash.toString() + "?d=retro&s=200"} />
           </div>

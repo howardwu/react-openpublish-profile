@@ -3,19 +3,51 @@
 
 var React = require('react');
 
+var tipToComment = require('tip-to-comment-client');
+var commonBlockchain = require('blockcypher-unofficial');
+var testCommonWallet = require('test-common-wallet');
+var ope;
+
 var OpenPublishProfile = require('../src');
 
 var address = 'mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg';
-var wif = 'cPKJaNZcbvByRpJ6GLA1jLo8U4bs3rU8AvovLUbWnDqPd1XZTgCC';
+// var wif = 'cPKJaNZcbvByRpJ6GLA1jLo8U4bs3rU8AvovLUbWnDqPd1XZTgCC';
+var wif = 'cPcutLXAfeiZ6jGvpS4AmW3jcfrzuCQLSBnjt35nYsePZBdf1u6W';
 var network = 'testnet';
+
+var commonBlock = commonBlockchain({
+  network: network,
+  inBrowser: true
+});
+
+var commonWallet = testCommonWallet({
+  commonBlockchain: commonBlock,
+  network: network,
+  wif: wif
+});
+
+var tipToComment = tipToComment({
+  inBrowser: true,
+  commonWallet: commonWallet
+});
+var openpublishState = require('openpublish-state')({
+  network: network
+});
 
 if (window.location.search.split("?address=") && window.location.search.split("?address=")[1]) {
   address = window.location.search.split("?address=")[1];
 }
 
-React.render(React.createElement(OpenPublishProfile, { address: address, wif: wif, network: network }), document.getElementById('example'));
+React.render(React.createElement(OpenPublishProfile, {
+  address: address,
+  network: network,
+  commonBlockchain: commonBlock,
+  commonWallet: commonWallet,
+  tipToComment: tipToComment,
+  openpublishState: openpublishState
+}), document.getElementById('example'));
 
-},{"../src":755,"react":645}],2:[function(require,module,exports){
+},{"../src":755,"blockcypher-unofficial":56,"openpublish-state":367,"react":645,"test-common-wallet":646,"tip-to-comment-client":649}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -91771,7 +91803,7 @@ var Comment = React.createClass({
           { className: 'commentHeader' },
           React.createElement(
             'a',
-            { href: "/profile?user=" + comment.commenter },
+            null,
             comment.commenter
           ),
           React.createElement(
@@ -91813,7 +91845,7 @@ var IDPicture = React.createClass({
     } else if (this.props.size) {
       return React.createElement(
         'a',
-        { href: "/profile?user=" + this.props.user_id },
+        null,
         React.createElement(
           'div',
           { className: 'hoverIdPicture' },
@@ -91847,10 +91879,6 @@ var Button = require('react-bootstrap/lib/Button');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 
-var tipToComment = require('tip-to-comment-client');
-var commonBlockchain = require('blockcypher-unofficial');
-var testCommonWallet = require('test-common-wallet');
-
 function postTime(datetime) {
   var oneDay = 24 * 60 * 60 * 1000;
   var oneHour = 60 * 60 * 1000;
@@ -91868,30 +91896,10 @@ var Profile = React.createClass({
   displayName: 'Profile',
 
   getInitialState: function getInitialState() {
-    var commonBlock = commonBlockchain({
-      network: this.props.network,
-      inBrowser: true
-    });
-    var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlock,
-      network: this.props.network,
-      wif: this.props.wif
-    });
-    var tipToCommentClient = tipToComment({
-      inBrowser: true,
-      commonWallet: commonWallet
-    });
-    var openpublishState = require('openpublish-state')({
-      network: this.props.network
-    });
     return {
       getProfileData: true,
       balance: "Loading...",
-      bitstore_balance: "Loading...",
-      wallet: commonWallet,
-      ttcClient: tipToCommentClient,
-      commonBlockchain: commonBlock,
-      openpublishState: openpublishState
+      bitstore_balance: "Loading..."
     };
   },
 
@@ -91909,7 +91917,7 @@ var Profile = React.createClass({
 
   balance: function balance() {
     var that = this;
-    this.state.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
+    this.props.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
       if (err) {
         console.log("error retrieving balance from common-blockchain");
       } else {
@@ -91926,7 +91934,7 @@ var Profile = React.createClass({
   },
 
   posts: function posts(callback) {
-    this.state.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
+    this.props.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
       if (!err) {
         callback(assets.posts);
       }
@@ -91934,7 +91942,7 @@ var Profile = React.createClass({
   },
 
   tips: function tips(callback) {
-    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
     //       callback(tips);
@@ -91954,7 +91962,7 @@ var Profile = React.createClass({
   },
 
   comments: function comments(callback) {
-    this.state.ttcClient.getComments({
+    this.props.tipToComment.getComments({
       method: "address",
       query: this.props.address
     }, function (err, resp) {
@@ -91987,9 +91995,10 @@ var Profile = React.createClass({
         post: posts[i],
         tipped: tipped,
         network: this.props.network,
-        user_id: this.props.address,
-        wallet: this.state.wallet,
-        blockchain: this.props.blockchain }));
+        user_id: this.props.commonWallet.address,
+        wallet: this.props.commonWallet,
+        blockchain: this.props.commonBlockchain,
+        tccClient: this.props.tipToComment }));
     }
     this.setState({
       posts: renderPosts,
@@ -92012,13 +92021,13 @@ var Profile = React.createClass({
           { style: { float: "left" } },
           React.createElement(
             'a',
-            { href: "/profile?user=" + tip.tipper },
+            null,
             tip.tipper
           ),
           ' tipped ',
           React.createElement(
             'a',
-            { href: "/permalink?sha1=" + tip.post },
+            null,
             tip.post
           )
         ),
@@ -92179,7 +92188,7 @@ var Profile = React.createClass({
 
 module.exports = Profile;
 
-},{"./bitstore.js":752,"./comment.js":753,"./id-picture.js":754,"./post.js":756,"blockcypher-unofficial":56,"openpublish-state":367,"react":645,"react-bootstrap/lib/Button":438,"react-bootstrap/lib/Col":440,"react-bootstrap/lib/Glyphicon":443,"react-bootstrap/lib/Nav":445,"react-bootstrap/lib/NavItem":446,"react-bootstrap/lib/Panel":447,"react-bootstrap/lib/Row":448,"test-common-wallet":646,"tip-to-comment-client":649,"xhr":743}],756:[function(require,module,exports){
+},{"./bitstore.js":752,"./comment.js":753,"./id-picture.js":754,"./post.js":756,"react":645,"react-bootstrap/lib/Button":438,"react-bootstrap/lib/Col":440,"react-bootstrap/lib/Glyphicon":443,"react-bootstrap/lib/Nav":445,"react-bootstrap/lib/NavItem":446,"react-bootstrap/lib/Panel":447,"react-bootstrap/lib/Row":448,"xhr":743}],756:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
@@ -92223,6 +92232,12 @@ var Post = React.createClass({
     });
   },
 
+  setTipErrorMessage: function setTipErrorMessage(error) {
+    this.setState({
+      tipMessage: error
+    });
+  },
+
   tip: function tip() {
     var post = this.props.post;
     if (this.state.hasTipped || this.props.user_id === this.props.post.owner) {
@@ -92236,7 +92251,7 @@ var Post = React.createClass({
         'div',
         { className: 'postTipButton' },
         React.createElement(Tip, { user_id: this.props.user_id, hasTipped: false, wallet: this.props.wallet,
-          blockchain: this.props.blockchain, post: this.props.post, success: this.updateHasTipped })
+          blockchain: this.props.blockchain, post: this.props.post, success: this.updateHasTipped, failure: this.setTipErrorMessage })
       );
     }
   },
@@ -92280,6 +92295,7 @@ var Post = React.createClass({
           var comments = resp;
           if (comments.length > 0) {
             var length = Math.min(3, comments.length);
+            var numLeft = Math.max(0, comments.length - 3);
             for (var i = 0; i < length; i++) {
               if (comments[i].confirmed || that.props.user_id === comments[i].commenter) {
                 var comment = comments[i];
@@ -92301,7 +92317,7 @@ var Post = React.createClass({
                       { className: 'commentHeader' },
                       React.createElement(
                         'a',
-                        { href: "/profile?user=" + comment.commenter },
+                        null,
                         comment.commenter.substring(0, 20) + "... "
                       ),
                       React.createElement(
@@ -92319,8 +92335,7 @@ var Post = React.createClass({
                   )
                 ));
               }
-              if (i === length - 1) {
-                var numLeft = comments.length - 3;
+              if (numLeft > 0) {
                 commentsJSX.push(React.createElement(
                   Panel,
                   { key: i },
@@ -92332,7 +92347,7 @@ var Post = React.createClass({
                       null,
                       React.createElement(
                         'a',
-                        { key: "comments:" + i, href: "permalink?sha1=" + sha1 },
+                        { key: "comments:" + i },
                         'See ',
                         numLeft,
                         ' more'
@@ -92340,17 +92355,13 @@ var Post = React.createClass({
                     )
                   )
                 ));
-                that.setState({
-                  comments: React.createElement(
-                    'div',
-                    null,
-                    commentsJSX
-                  ),
-                  numComments: comments.length,
-                  loading: false
-                });
               }
             }
+            that.setState({
+              comments: { commentsJSX: commentsJSX },
+              numComments: comments.length,
+              loading: false
+            });
           } else {
             commentsJSX.push(React.createElement(
               Panel,
@@ -92362,23 +92373,6 @@ var Post = React.createClass({
                   'h4',
                   null,
                   'No Comments to Display'
-                )
-              )
-            ));
-            commentsJSX.push(React.createElement(
-              Panel,
-              { key: 1 },
-              React.createElement(
-                'center',
-                null,
-                React.createElement(
-                  'h5',
-                  null,
-                  React.createElement(
-                    'a',
-                    { key: "comments:" + i, href: "permalink?sha1=" + sha1 },
-                    'See more'
-                  )
                 )
               )
             ));
@@ -92442,7 +92436,7 @@ var Post = React.createClass({
         { className: 'postPermalink' },
         React.createElement(
           'a',
-          { href: "permalink?sha1=" + post.sha1 },
+          null,
           React.createElement(Glyphicon, { glyph: 'link' })
         )
       ),
@@ -92455,7 +92449,7 @@ var Post = React.createClass({
           ' ',
           React.createElement(
             'a',
-            { href: "/profile?user=" + post.owner },
+            null,
             post.owner,
             ' '
           ),
@@ -92471,28 +92465,28 @@ var Post = React.createClass({
       React.createElement(
         'div',
         { className: 'postContent' },
-        React.createElement(BitstoreContent, { post: post, permalink: false }),
+        React.createElement(BitstoreContent, { post: post, permalink: false })
+      ),
+      React.createElement(
+        'div',
+        { className: 'postTipActions' },
+        this.tip(),
         React.createElement(
           'div',
-          { className: 'postTipActions' },
-          this.tip(),
-          React.createElement(
-            'div',
-            { className: 'postCommentLink' },
-            commentButton
-          )
+          { className: 'postCommentLink' },
+          commentButton
         ),
         React.createElement(
-          'p',
-          null,
+          'div',
+          { className: 'postTipError' },
           ' ',
           this.state.tipMessage
-        ),
-        React.createElement(
-          'div',
-          { className: 'postCommentBox' },
-          this.state.comments
         )
+      ),
+      React.createElement(
+        'div',
+        { className: 'postCommentBox' },
+        this.state.comments
       )
     );
   }
@@ -92563,8 +92557,8 @@ var TipButton = React.createClass({
         }, function (error, tipTx) {
           if (error) {
             console.log("did not update balances: " + error);
-            that.setState({ isLoading: false, hasTipped: false,
-              tipMessage: "error processing your tip. Make sure you have enough bitcoin in your wallet!" });
+            that.setState({ isLoading: false, hasTipped: false });
+            that.props.failure("Not enough bitcoin in wallet.");
           } else {
             var tipBody = { owner: post.owner, sha1: post.sha1, txid: tipTx.txid };
             xhr({

@@ -16,10 +16,6 @@ var Button = require('react-bootstrap/lib/Button');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 
-var tipToComment = require('tip-to-comment-client');
-var commonBlockchain = require('blockcypher-unofficial');
-var testCommonWallet = require('test-common-wallet');
-
 function postTime(datetime) {
   var oneDay = 24 * 60 * 60 * 1000;
   var oneHour = 60 * 60 * 1000;
@@ -37,30 +33,10 @@ var Profile = React.createClass({
   displayName: 'Profile',
 
   getInitialState: function getInitialState() {
-    var commonBlock = commonBlockchain({
-      network: this.props.network,
-      inBrowser: true
-    });
-    var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlock,
-      network: this.props.network,
-      wif: this.props.wif
-    });
-    var tipToCommentClient = tipToComment({
-      inBrowser: true,
-      commonWallet: commonWallet
-    });
-    var openpublishState = require('openpublish-state')({
-      network: this.props.network
-    });
     return {
       getProfileData: true,
       balance: "Loading...",
-      bitstore_balance: "Loading...",
-      wallet: commonWallet,
-      ttcClient: tipToCommentClient,
-      commonBlockchain: commonBlock,
-      openpublishState: openpublishState
+      bitstore_balance: "Loading..."
     };
   },
 
@@ -78,7 +54,7 @@ var Profile = React.createClass({
 
   balance: function balance() {
     var that = this;
-    this.state.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
+    this.props.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
       if (err) {
         console.log("error retrieving balance from common-blockchain");
       } else {
@@ -95,7 +71,7 @@ var Profile = React.createClass({
   },
 
   posts: function posts(callback) {
-    this.state.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
+    this.props.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
       if (!err) {
         callback(assets.posts);
       }
@@ -103,7 +79,7 @@ var Profile = React.createClass({
   },
 
   tips: function tips(callback) {
-    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
     //       callback(tips);
@@ -123,7 +99,7 @@ var Profile = React.createClass({
   },
 
   comments: function comments(callback) {
-    this.state.ttcClient.getComments({
+    this.props.tipToComment.getComments({
       method: "address",
       query: this.props.address
     }, function (err, resp) {
@@ -156,9 +132,10 @@ var Profile = React.createClass({
         post: posts[i],
         tipped: tipped,
         network: this.props.network,
-        user_id: this.props.address,
-        wallet: this.state.wallet,
-        blockchain: this.props.blockchain }));
+        user_id: this.props.commonWallet.address,
+        wallet: this.props.commonWallet,
+        blockchain: this.props.commonBlockchain,
+        tccClient: this.props.tipToComment }));
     }
     this.setState({
       posts: renderPosts,
@@ -181,13 +158,13 @@ var Profile = React.createClass({
           { style: { float: "left" } },
           React.createElement(
             'a',
-            { href: "/profile?user=" + tip.tipper },
+            null,
             tip.tipper
           ),
           ' tipped ',
           React.createElement(
             'a',
-            { href: "/permalink?sha1=" + tip.post },
+            null,
             tip.post
           )
         ),

@@ -37,7 +37,7 @@ var Comment = React.createClass({
             <IDPicture size={30} user_id={comment.commenter} />
           </div>
           <div className="commentHeader">
-            <a href={"/profile?user=" + comment.commenter}>{comment.commenter}</a>
+            <a>{comment.commenter}</a>
             <div style={{float: "right", fontWeight: "bold"}}>
               {pendingOrConfirmed}
             </div>
