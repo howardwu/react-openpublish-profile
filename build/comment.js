@@ -45,7 +45,7 @@ var Comment = React.createClass({
           { className: 'commentHeader' },
           React.createElement(
             'a',
-            { href: "/profile?user=" + comment.commenter },
+            null,
             comment.commenter
           ),
           React.createElement(

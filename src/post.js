@@ -41,9 +41,15 @@ var Post = React.createClass({
     })
   },
 
+  setTipErrorMessage: function (error) {
+    this.setState({
+      tipMessage: error
+    });
+  },
+
   tip: function () {
     var post = this.props.post;
-    if (this.state.hasTipped || this.props.user_id === this.props.post.owner) {
+    if (this.state.hasTipped) {
       return (
         <div className="postTipButton">
           <Tip user_id={this.props.user_id} hasTipped={true} wallet={this.props.wallet} blockchain={this.props.blockchain} post={this.props.post}/>
@@ -54,7 +60,7 @@ var Post = React.createClass({
       return (
         <div className="postTipButton">
           <Tip user_id={this.props.user_id} hasTipped={false} wallet={this.props.wallet}
-           blockchain={this.props.blockchain} post={this.props.post} success={this.updateHasTipped} />
+           blockchain={this.props.blockchain} post={this.props.post} success={this.updateHasTipped} failure={this.setTipErrorMessage} />
         </div>
       );
     }
@@ -91,6 +97,7 @@ var Post = React.createClass({
           var comments = resp;
           if (comments.length > 0) {
             var length = Math.min(3, comments.length);
+            var numLeft = Math.max(0, comments.length - 3);
             for (var i = 0; i < length; i++) {
               if (comments[i].confirmed || that.props.user_id === comments[i].commenter) {
                 var comment = comments[i];
@@ -103,7 +110,7 @@ var Post = React.createClass({
                         <IDPicture size={30} user_id={comment.commenter} />
                       </div>
                       <div className="commentHeader">
-                        <a href={"/profile?user=" + comment.commenter}>{comment.commenter.substring(0, 20) + "... "}</a>
+                        <a>{comment.commenter.substring(0, 20) + "... "}</a>
                         <div style={{float: "right", fontWeight: "bold"}}>
                           {pendingOrConfirmed}
                         </div>
@@ -116,35 +123,27 @@ var Post = React.createClass({
                   </Panel>
                 );
               }
-              if (i === length - 1) {
-                var numLeft = comments.length - 3;
+              if (numLeft > 0) {
                 commentsJSX.push(
                   <Panel key={i}>
                     <center>
-                      <h5><a key={"comments:" + i} href={"permalink?sha1=" + sha1}>See {numLeft} more</a></h5>
+                      <h5><a key={"comments:" + i}>See {numLeft} more</a></h5>
                     </center>
                   </Panel>
                 );
-                that.setState({
-                  comments: <div>{commentsJSX}</div>,
-                  numComments: comments.length,
-                  loading: false
-                });
               }
             }
+            that.setState({
+              comments: {commentsJSX},
+              numComments: comments.length,
+              loading: false
+            });
           }
           else {
             commentsJSX.push(
               <Panel key={0}>
                 <center>
                   <h4>No Comments to Display</h4>
-                </center>
-              </Panel>
-            );
-            commentsJSX.push(
-              <Panel key={1}>
-                <center>
-                  <h5><a key={"comments:" + i} href={"permalink?sha1=" + sha1}>See more</a></h5>
                 </center>
               </Panel>
             );
@@ -192,38 +191,36 @@ var Post = React.createClass({
     return (
       <Panel key={post.sha1}>
         <div className="postIDPicture">
-          <IDPicture size={50} user_id={post.owner} />
+          <IDPicture size={50} user_id={this.props.owner} />
         </div>
 
         <div className="postPermalink"> 
-          <a href={"permalink?sha1=" + post.sha1}>
+          <a>
             <Glyphicon glyph='link' />
           </a>
         </div>
 
         <div className="postText">
-          <b> <a href={"/profile?user=" + post.owner}>{post.owner} </a> </b> published {connector} {type}
+          <b> <a>{this.props.owner} </a> </b> published {connector} {type}
           <br />
-          {postTime(post.datetime)}
+          {postTime(post.created_at)}
         </div>
 
         <div className="postContent">
-
           <BitstoreContent post={post} permalink={false} />
-
-          <div className="postTipActions">
-            {this.tip()}
-            <div className="postCommentLink">
-              {commentButton}
-            </div>
-          </div>
-
-          <p> {this.state.tipMessage}</p>
-          <div className="postCommentBox">
-            {this.state.comments}
-          </div>
         </div>
-
+        
+        <div className="postTipActions">
+          {this.tip()}
+          <div className="postCommentLink">
+            {commentButton}
+          </div>
+          <div className="postTipError"> {this.state.tipMessage}</div>
+        </div> 
+        
+        <div className="postCommentBox">
+          {this.state.comments}
+        </div>
       </Panel>
     );
   }

@@ -16,35 +16,35 @@ var BitstoreContent = React.createClass({
     if (!permalink) {
       if (type === "image") {
         return (
-          <a href={"permalink?sha1=" + post.sha1}>
-            <img className="bitstoreImagePreview" src={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1}/>
+          <a>
+            <img className="bitstoreImagePreview" src={post.uri}/>
           </a>
         );
       }
       else if (type === "text") {
         return (
           <Panel>
-            <a href={"permalink?sha1=" + post.sha1}>
-              <iframe width="100%" frameBorder="0" src={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1} />
+            <a>
+              <iframe width="100%" frameBorder="0" src={post.uri} />
             </a>
           </Panel>
         );
       }
       else if (type === "audio") {
-        return <Audio uri={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1} />;
+        return <Audio uri={post.uri} />;
       }
       else if (type === "" || type === null) {
         return (
-          <a href={"permalink?sha1=" + post.sha1}>
-            <img src={"/images/raw.png"} />
+          <a>
+            <img src={"/public/images/raw.png"} />
           </a>
         );
       }
       else if (type === "application") {
         return (
           <Panel>
-            <a href={"permalink?sha1=" + post.sha1}>
-              <iframe width="100%" frameBorder="0" src={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1} />
+            <a>
+              <iframe width="100%" frameBorder="0" src={post.uri} />
             </a>
           </Panel>
         ); 
@@ -52,12 +52,12 @@ var BitstoreContent = React.createClass({
     }
     else if (permalink) {
       if (type === "image") {
-        return <img width="100%" src={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1} />;
+        return <img width="100%" src={post.uri} />;
       }
       else {
         return (
           <Panel>
-            <iframe width="100%" frameBorder="0" src={"https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1} />
+            <iframe width="100%" frameBorder="0" src={post.uri} />
           </Panel>
         );
       }

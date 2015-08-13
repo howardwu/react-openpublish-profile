@@ -4,7 +4,6 @@ var xhr = require('xhr');
 var Post = require('./post.js');
 var Comment = require('./comment.js');
 var IDPicture = require('./id-picture.js');
-var getBitstoreBalance = require('./bitstore.js');
 
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
@@ -14,9 +13,6 @@ var Button = require('react-bootstrap/lib/Button');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
 
-var tipToComment = require('tip-to-comment-client');
-var commonBlockchain = require('blockcypher-unofficial');
-var testCommonWallet = require('test-common-wallet');
 
 function postTime(datetime) {
   var oneDay = 24*60*60*1000;
@@ -37,30 +33,9 @@ function postTime(datetime) {
 
 var Profile = React.createClass({
   getInitialState: function() {
-    var commonBlock = commonBlockchain({
-      network: this.props.network,
-      inBrowser: true
-    });
-    var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlock,
-      network: this.props.network,
-      wif: this.props.wif
-    });
-    var tipToCommentClient = tipToComment({
-      inBrowser: true,
-      commonWallet: commonWallet
-    });
-    var openpublishState = require('openpublish-state')({
-      network: this.props.network
-    });
     return {
       getProfileData: true,
       balance: "Loading...",
-      bitstore_balance: "Loading...",
-      wallet: commonWallet,
-      ttcClient: tipToCommentClient,
-      commonBlockchain: commonBlock,
-      openpublishState: openpublishState
     }
   },
 
@@ -68,7 +43,7 @@ var Profile = React.createClass({
     this.balance();
     var that = this;
     this.posts(function (posts) {
-      that.tips(BASE, function (tips) {
+      that.tips(function (tips) {
         that.comments(function (comments) {
           that.renderProfile(posts, comments, tips);
         });
@@ -78,61 +53,56 @@ var Profile = React.createClass({
 
   balance: function () {
     var that = this;
-    this.state.commonBlockchain.Addresses.Summary([ this.props.address ], function (err, resp) {
+    this.props.commonBlockchain.Addresses.Summary([ this.props.address ], function (err, resp) {
       if (err) {
         console.log("error retrieving balance from common-blockchain");
       }
       else {
         var balance = resp[0].balance / 100000000;
-        getBitstoreBalance(that.props.wif, that.props.network, function (error, bitstoreBalance) {
-          that.setState({
-            balance: balance,
-            bitstore_balance: bitstoreBalance.body.balance / 100000000,
-            updateBalance: false
-          });
+        that.setState({
+          balance: balance
         });
       }
     });
   },
 
   posts: function (callback) {
-    this.state.openpublishState.findAssetsByUser({ address: this.props.address },
+    this.props.openpublishState.findDocsByUser({ address: this.props.address },
       function (err, assets) {
         if (!err) {
-          callback(assets.posts);
+          callback(assets);
         }
       }
     );
   },
 
-  tips: function (base, callback) {
-    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+  tips: function (callback) {
+    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
     //       callback(tips);
     //     }
     //   }
     // );
-
     var that = this;
      xhr({
-      uri: base + '/getTips?user=' + this.props.address,    
+      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,    
       method: 'GET'
     }, function (err, resp, body) {
       if (err) console.log("error fetching comments from server: " + err);
       else {
-        callback(JSON.parse(body).tips);
+        callback(JSON.parse(body));
       }
     });
   },
 
   comments: function (callback) {
-    this.state.ttcClient.getComments({
+    this.props.tipToComment.getComments({
       method: "address",
       query: this.props.address
     }, function (err, resp) {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
       else {
         callback(resp);
@@ -157,16 +127,19 @@ var Profile = React.createClass({
     }
     for (var i = 0; i < posts.length; i++) {
       var post = posts[i];
-      var tipped = false;
+      var tipped = this.props.address === this.props.commonWallet.address;
+      console.log(tipped);
       renderPosts.push(
         <Post key={i}
               refKey={i}
               post={posts[i]} 
               tipped={tipped}
               network={this.props.network}
-              user_id={this.props.address}
-              wallet={this.state.wallet}
-              blockchain={this.props.blockchain} />
+              user_id={this.props.commonWallet.address}
+              wallet={this.props.commonWallet}
+              blockchain={this.props.commonBlockchain}
+              tccClient={this.props.tipToComment}
+              owner={this.props.address} />
       );
     }
     this.setState({
@@ -183,7 +156,7 @@ var Profile = React.createClass({
       <Panel key={key}>
         <div>
           <div style={{float: "left"}}>
-            <a href={"/profile?user=" + tip.tipper}>{tip.tipper}</a> tipped <a href={"/permalink?sha1=" + tip.post}>{tip.post}</a>
+            <a>{tip.tipper}</a> tipped <a>{tip.post}</a>
           </div>
           <div style={{float: "right", fontSize: "15px", fontWeight: "bold"}}>
             {postTime(tip.datetime)}
@@ -196,7 +169,6 @@ var Profile = React.createClass({
           </div>
 
           <Glyphicon glyph='arrow-right' className="tipArrow"/>
-        
           <div className="tipPicture">
             <IDPicture size={50} user_id={tip.owner}/>
           </div>

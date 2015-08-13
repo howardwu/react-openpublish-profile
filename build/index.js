@@ -6,7 +6,6 @@ var xhr = require('xhr');
 var Post = require('./post.js');
 var Comment = require('./comment.js');
 var IDPicture = require('./id-picture.js');
-var getBitstoreBalance = require('./bitstore.js');
 
 var Row = require('react-bootstrap/lib/Row');
 var Col = require('react-bootstrap/lib/Col');
@@ -15,10 +14,6 @@ var Panel = require('react-bootstrap/lib/Panel');
 var Button = require('react-bootstrap/lib/Button');
 var NavItem = require('react-bootstrap/lib/NavItem');
 var Glyphicon = require('react-bootstrap/lib/Glyphicon');
-
-var tipToComment = require('tip-to-comment-client');
-var commonBlockchain = require('blockcypher-unofficial');
-var testCommonWallet = require('test-common-wallet');
 
 function postTime(datetime) {
   var oneDay = 24 * 60 * 60 * 1000;
@@ -37,123 +32,73 @@ var Profile = React.createClass({
   displayName: 'Profile',
 
   getInitialState: function getInitialState() {
-    var commonBlock = commonBlockchain({
-      network: this.props.network,
-      inBrowser: true
-    });
-    var commonWallet = testCommonWallet({
-      commonBlockchain: commonBlock,
-      network: this.props.network,
-      wif: this.props.wif
-    });
-    var tipToCommentClient = tipToComment({
-      inBrowser: true,
-      commonWallet: commonWallet
-    });
-    var openpublishState = require('openpublish-state')({
-      network: this.props.network
-    });
     return {
       getProfileData: true,
-      balance: "Loading...",
-      bitstore_balance: "Loading...",
-      wallet: commonWallet,
-      ttcClient: tipToCommentClient,
-      commonBlockchain: commonBlock,
-      openpublishState: openpublishState
+      balance: "Loading..."
     };
   },
 
   componentDidMount: function componentDidMount() {
     this.balance();
-
-    var BASE = 'http://coinvote-testnet.herokuapp.com';
-    if (this.props.network === undefined) console.log('No network parameter is specified, defaulting to testnet.');
-    if (this.props.network === 'mainnet') BASE = 'http://coinvote.herokuapp.com';
-
-    var userPosts;
-    var userTips;
-    var userComments;
-    var queryCount = 0;
-    var queryGoal = 3;
-
     var that = this;
     this.posts(function (posts) {
-      userPosts = posts;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    });
-    this.tips(BASE, function (tips) {
-      userTips = tips;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
-    });
-    this.comments(function (comments) {
-      userComments = comments;
-      if (++queryCount === queryGoal) {
-        that.renderProfile(userPosts, userComments, userTips);
-      }
+      that.tips(function (tips) {
+        that.comments(function (comments) {
+          that.renderProfile(posts, comments, tips);
+        });
+      });
     });
   },
 
   balance: function balance() {
     var that = this;
-    this.state.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
+    this.props.commonBlockchain.Addresses.Summary([this.props.address], function (err, resp) {
       if (err) {
         console.log("error retrieving balance from common-blockchain");
       } else {
         var balance = resp[0].balance / 100000000;
-        getBitstoreBalance(that.props.wif, that.props.network, function (error, bitstoreBalance) {
-          that.setState({
-            balance: balance,
-            bitstore_balance: bitstoreBalance.body.balance / 100000000,
-            updateBalance: false
-          });
+        that.setState({
+          balance: balance
         });
       }
     });
   },
 
   posts: function posts(callback) {
-    this.state.openpublishState.findAssetsByUser({ address: this.props.address }, function (err, assets) {
+    this.props.openpublishState.findDocsByUser({ address: this.props.address }, function (err, assets) {
       if (!err) {
-        callback(assets.posts);
+        callback(assets);
       }
     });
   },
 
-  tips: function tips(base, callback) {
-    // this.state.openpublishState.findTipsByUser({ address: this.props.address },
+  tips: function tips(callback) {
+    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
     //   function (err, tips) {
     //     if (!err) {
     //       callback(tips);
     //     }
     //   }
     // );
-
     var that = this;
     xhr({
-      uri: base + '/getTips?user=' + this.props.address,
+      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,
       method: 'GET'
     }, function (err, resp, body) {
       if (err) console.log("error fetching comments from server: " + err);else {
-        callback(JSON.parse(body).tips);
+        callback(JSON.parse(body));
       }
     });
   },
 
   comments: function comments(callback) {
-    var that = this;
-    this.state.ttcClient.getComments({
+    this.props.tipToComment.getComments({
       method: "address",
       query: this.props.address
     }, function (err, resp) {
       if (err) {
-        console.log(err);
+        console.error(err);
       } else {
-        console.log(resp);
         callback(resp);
       }
     });
@@ -174,15 +119,18 @@ var Profile = React.createClass({
     }
     for (var i = 0; i < posts.length; i++) {
       var post = posts[i];
-      var tipped = false;
+      var tipped = this.props.address === this.props.commonWallet.address;
+      console.log(tipped);
       renderPosts.push(React.createElement(Post, { key: i,
         refKey: i,
         post: posts[i],
         tipped: tipped,
         network: this.props.network,
-        user_id: this.props.address,
-        wallet: this.state.wallet,
-        blockchain: this.props.blockchain }));
+        user_id: this.props.commonWallet.address,
+        wallet: this.props.commonWallet,
+        blockchain: this.props.commonBlockchain,
+        tccClient: this.props.tipToComment,
+        owner: this.props.address }));
     }
     this.setState({
       posts: renderPosts,
@@ -205,13 +153,13 @@ var Profile = React.createClass({
           { style: { float: "left" } },
           React.createElement(
             'a',
-            { href: "/profile?user=" + tip.tipper },
+            null,
             tip.tipper
           ),
           ' tipped ',
           React.createElement(
             'a',
-            { href: "/permalink?sha1=" + tip.post },
+            null,
             tip.post
           )
         ),

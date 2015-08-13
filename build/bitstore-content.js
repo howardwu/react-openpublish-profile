@@ -21,8 +21,8 @@ var BitstoreContent = React.createClass({
       if (type === "image") {
         return React.createElement(
           'a',
-          { href: "permalink?sha1=" + post.sha1 },
-          React.createElement('img', { className: 'bitstoreImagePreview', src: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 })
+          null,
+          React.createElement('img', { className: 'bitstoreImagePreview', src: post.uri })
         );
       } else if (type === "text") {
         return React.createElement(
@@ -30,17 +30,17 @@ var BitstoreContent = React.createClass({
           null,
           React.createElement(
             'a',
-            { href: "permalink?sha1=" + post.sha1 },
-            React.createElement('iframe', { width: '100%', frameBorder: '0', src: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 })
+            null,
+            React.createElement('iframe', { width: '100%', frameBorder: '0', src: post.uri })
           )
         );
       } else if (type === "audio") {
-        return React.createElement(Audio, { uri: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 });
+        return React.createElement(Audio, { uri: post.uri });
       } else if (type === "" || type === null) {
         return React.createElement(
           'a',
-          { href: "permalink?sha1=" + post.sha1 },
-          React.createElement('img', { src: "/images/raw.png" })
+          null,
+          React.createElement('img', { src: "/public/images/raw.png" })
         );
       } else if (type === "application") {
         return React.createElement(
@@ -48,19 +48,19 @@ var BitstoreContent = React.createClass({
           null,
           React.createElement(
             'a',
-            { href: "permalink?sha1=" + post.sha1 },
-            React.createElement('iframe', { width: '100%', frameBorder: '0', src: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 })
+            null,
+            React.createElement('iframe', { width: '100%', frameBorder: '0', src: post.uri })
           )
         );
       }
     } else if (permalink) {
       if (type === "image") {
-        return React.createElement('img', { width: '100%', src: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 });
+        return React.createElement('img', { width: '100%', src: post.uri });
       } else {
         return React.createElement(
           Panel,
           null,
-          React.createElement('iframe', { width: '100%', frameBorder: '0', src: "https://bitstore-test.blockai.com/" + post.owner + "/sha1/" + post.sha1 })
+          React.createElement('iframe', { width: '100%', frameBorder: '0', src: post.uri })
         );
       }
     } else {
