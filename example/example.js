@@ -3,7 +3,6 @@ var React = require('react');
 var tipToComment = require('tip-to-comment-client');
 var commonBlockchain = require('blockcypher-unofficial');
 var testCommonWallet = require('test-common-wallet');
-var ope
 
 var OpenPublishProfile = require('../src');
 
