@@ -1,6 +1,6 @@
 {
   "name": "react-openpublish-profile",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A React component for querying and rendering OpenPublish assets",
   "main": "build/index.js",
   "scripts": {
