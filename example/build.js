@@ -89981,20 +89981,9 @@ var Profile = React.createClass({
   },
 
   tips: function tips(callback) {
-    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
-    //   function (err, tips) {
-    //     if (!err) {
-    //       callback(tips);
-    //     }
-    //   }
-    // );
-    var that = this;
-    xhr({
-      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,
-      method: 'GET'
-    }, function (err, resp, body) {
-      if (err) console.log("error fetching comments from server: " + err);else {
-        callback(JSON.parse(body));
+    this.props.openpublishState.findTipsByUser({ address: this.props.address }, function (err, tips) {
+      if (!err) {
+        callback(tips);
       }
     });
   },

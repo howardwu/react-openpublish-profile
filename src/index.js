@@ -77,23 +77,13 @@ var Profile = React.createClass({
   },
 
   tips: function (callback) {
-    // this.props.openpublishState.findTipsByUser({ address: this.props.address },
-    //   function (err, tips) {
-    //     if (!err) {
-    //       callback(tips);
-    //     }
-    //   }
-    // );
-    var that = this;
-     xhr({
-      url: 'http://coinvote-testnet.herokuapp.com/getTips?user=' + this.props.address,    
-      method: 'GET'
-    }, function (err, resp, body) {
-      if (err) console.log("error fetching comments from server: " + err);
-      else {
-        callback(JSON.parse(body));
+    this.props.openpublishState.findTipsByUser({ address: this.props.address },
+      function (err, tips) {
+        if (!err) {
+          callback(tips);
+        }
       }
-    });
+    );
   },
 
   comments: function (callback) {
@@ -128,7 +118,6 @@ var Profile = React.createClass({
     for (var i = 0; i < posts.length; i++) {
       var post = posts[i];
       var tipped = this.props.address === this.props.commonWallet.address;
-      console.log(tipped);
       renderPosts.push(
         <Post key={i}
               refKey={i}
