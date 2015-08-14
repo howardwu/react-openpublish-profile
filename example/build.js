@@ -90017,7 +90017,6 @@ var Profile = React.createClass({
     for (var i = 0; i < posts.length; i++) {
       var post = posts[i];
       var tipped = this.props.address === this.props.commonWallet.address;
-      console.log(tipped);
       renderPosts.push(React.createElement(Post, { key: i,
         refKey: i,
         post: posts[i],
